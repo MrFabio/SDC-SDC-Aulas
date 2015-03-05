@@ -1,2 +1,3 @@
-# SDC-SDC-Aulas
-Reliable Distributed Systems
+#Reliable Distributed Systems
+@Distributed Systems and Cryptography
+
