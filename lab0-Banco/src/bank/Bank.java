@@ -1,25 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package banco;
+package bank;
 
-import java.util.ArrayList;
-
-/**
- *
- * @author Win7
- */
-public class Banco implements BancoInterface {
+public class Bank implements BankInterface {
 
     private int money;
 
-    public Banco(int money) {
+    public Bank(int money) {
         this.money = money;
     }
 
-    public Banco() {
+    public Bank() {
         this.money = 0;
     }
 
