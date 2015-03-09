@@ -18,15 +18,17 @@ import java.util.logging.Logger;
  */
 public class ClientHandler extends Thread {
 
-    Socket cli;
-    boolean online;
+    Socket cli = null;
+    boolean online = False;
+    Bank bn = null;
 
     ObjectInputStream ois;
     ObjectOutputStream oos;
 
-    public ClientHandler(Socket cli) {
+    public ClientHandler(Socket cli, Bank bn) {
 
         this.cli = cli;
+        this.bn = bn;
     }
 
     @Override
@@ -55,14 +57,14 @@ public class ClientHandler extends Thread {
                         break;
 
                     case BALANCE:
-                        int balance = Server.myBank.balance();
+                        int balance = this.bn.balance();
                         oos.writeInt(balance);
                         oos.flush();
                         break;
 
                     case MOVE:
                         int ammount = req.getAmmount();
-                        boolean moved = Server.myBank.move(ammount);
+                        boolean moved = this.bn.move(ammount);
                         oos.writeBoolean(moved);
                         oos.flush();
                         break;
