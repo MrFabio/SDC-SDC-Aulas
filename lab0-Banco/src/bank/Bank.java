@@ -15,7 +15,7 @@ public class Bank implements BankInterface {
     @Override
     public synchronized boolean move(int ammount) {
 
-        if (ammount > 0 || (ammount < 0 && money > -ammount)) {
+        if (ammount > 0 || (ammount < 0 && money >= -ammount)) {
             money += ammount;
             return true;
         } else {

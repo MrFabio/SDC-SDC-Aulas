@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package bank;
 
 import java.io.IOException;
@@ -11,11 +6,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import methods.*;
 
-/**
- *
- * @author Win7
- */
 public class ClientHandler extends Thread {
 
     Socket cli = null;
@@ -33,7 +25,7 @@ public class ClientHandler extends Thread {
 
     @Override
     public void run() {
-        Request req;
+        Op o;
         try {
             ois = new ObjectInputStream(this.cli.getInputStream());
             oos = new ObjectOutputStream(this.cli.getOutputStream());
@@ -45,36 +37,28 @@ public class ClientHandler extends Thread {
 
             while (online) {
 
-                req = (Request) ois.readObject();
+                o = (Op) ois.readObject();
 
-                switch (req.getType()) {
-
-                    case QUIT:
-                        oos.close();
-                        ois.close();
-                        online = false;
-                        System.out.println("Client exited");
-                        break;
-
-                    case BALANCE:
-                        int balance = this.bn.getBalance();
-                        oos.writeInt(balance);
-                        oos.flush();
-                        break;
-
-                    case MOVE:
-                        int ammount = req.getAmmount();
-                        boolean moved = this.bn.move(ammount);
-                        oos.writeBoolean(moved);
-                        oos.flush();
-                        break;
-
-                    default:
-                        break;
-
+                if (o instanceof Quit) {
+                    oos.close();
+                    ois.close();
+                    online = false;
+                    System.out.println("Client exited");
+                } else if (o instanceof Balance) {
+                    int balance = this.bn.getBalance();
+                    Res r = new BalanceRes(true, balance);
+                    oos.writeObject(r);
+                    oos.flush();
+                } else if (o instanceof Move) {
+                    int ammount = ((Move) o).getAmmount();
+                    boolean moved = this.bn.move(ammount);
+                    Res r = new MoveRes(moved);
+                    oos.writeObject(r);
+                    oos.flush();
                 }
 
             }
+
         } catch (IOException | ClassNotFoundException ex) {
             try {
                 oos.close();

@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import methods.*;
 
 /**
  *
@@ -36,37 +37,41 @@ public class BankStub implements BankInterface {
 
     }
 
+    @Override
     public int getBalance() {
-        int balance = -1;
+        BalanceRes r = new BalanceRes(false, -1);
         try {
-            Request r = new Request(Request.Type.BALANCE);
-            oos.writeObject(r);
+            Op o = new Balance();
+            oos.writeObject(o);
             oos.flush();
 
-            balance = ois.readInt();
-        } catch (IOException ex) {
+            r = ((BalanceRes) ois.readObject());
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(BankStub.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return balance;
+        return r.isSuccess() ? r.getBalance() : -1;
     }
 
+    @Override
     public boolean move(int ammount) {
-        boolean result = false;
+
+        MoveRes r = new MoveRes(false);
         try {
-            Request r = new Request(Request.Type.MOVE, ammount);
-            oos.writeObject(r);
+            Op o = new Move(ammount);
+            oos.writeObject(o);
             oos.flush();
 
-            result = ois.readBoolean();
-        } catch (IOException ex) {
+            r = ((MoveRes) ois.readObject());
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(BankStub.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return result;
+        return r.isSuccess();
     }
 
     public void quit() {
         try {
-            oos.writeObject(new Request(Request.Type.QUIT));
+            Op o = new Quit();
+            oos.writeObject(o);
             ois.close();
             oos.close();
             s.close();
