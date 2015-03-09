@@ -21,7 +21,7 @@ public class Server {
             System.out.println("Waiting for a client ...");
             Socket soc = ss.accept();
             System.out.println("Client accepted: " + soc + "\n");
-            ClientHandler sc = new ClientHandler(soc);
+            ClientHandler sc = new ClientHandler(soc, myBank);
 
             sc.start();
             i++;
