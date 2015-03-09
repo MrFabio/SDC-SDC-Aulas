@@ -38,10 +38,10 @@ public class Test1 {
             Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
         }
         //System.out.println("saldo final:" + banco.balance());
-        if (myBank.balance() == Test1.sumT) {
+        if (myBank.getBalance() == Test1.sumT) {
             System.out.println("OK");
         } else {
-            System.out.println("NOT OK: " + myBank.balance() + " | " + Test1.sumT);
+            System.out.println("NOT OK: " + myBank.getBalance() + " | " + Test1.sumT);
         }
     }
 

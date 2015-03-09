@@ -11,7 +11,7 @@ package bank;
  */
 public interface BankInterface {
 
-    int balance();
+    int getBalance();
 
     boolean move(int ammount);
 

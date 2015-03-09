@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class ClientHandler extends Thread {
 
     Socket cli = null;
-    boolean online = False;
+    boolean online = false;
     Bank bn = null;
 
     ObjectInputStream ois;
@@ -57,7 +57,7 @@ public class ClientHandler extends Thread {
                         break;
 
                     case BALANCE:
-                        int balance = this.bn.balance();
+                        int balance = this.bn.getBalance();
                         oos.writeInt(balance);
                         oos.flush();
                         break;

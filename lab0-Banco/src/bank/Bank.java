@@ -24,7 +24,7 @@ public class Bank implements BankInterface {
     }
 
     @Override
-    public synchronized int balance() {
+    public synchronized int getBalance() {
         return money;
     }
 

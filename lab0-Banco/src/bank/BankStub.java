@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  *
  * @author Win7
  */
-public class BankStub {
+public class BankStub implements BankInterface {
 
     Socket s;
     ObjectInputStream ois;
