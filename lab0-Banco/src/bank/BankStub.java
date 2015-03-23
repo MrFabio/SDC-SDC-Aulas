@@ -14,6 +14,7 @@ import net.sf.jgcs.MessageListener;
 import net.sf.jgcs.Protocol;
 import net.sf.jgcs.ip.IpGroup;
 import net.sf.jgcs.ip.IpProtocolFactory;
+import net.sf.jgcs.ip.IpService;
 
 public class BankStub implements BankInterface, MessageListener {
 
@@ -50,7 +51,7 @@ public class BankStub implements BankInterface, MessageListener {
     }
 
     @Override
-    public int getBalance() {
+    public synchronized int getBalance() {
         BalanceRes r = new BalanceRes(false, -1);
         try {
             Op o = new Balance();
@@ -60,7 +61,7 @@ public class BankStub implements BankInterface, MessageListener {
             oos.flush();
 
             msg.setPayload(os.toByteArray());
-            ds.multicast(msg, null, null);
+            ds.multicast(msg, new IpService(), null);
             msg = null;
             while (msg == null) {
                 wait();
@@ -75,7 +76,7 @@ public class BankStub implements BankInterface, MessageListener {
     }
 
     @Override
-    public boolean move(int ammount) {
+    public synchronized boolean move(int ammount) {
 
         MoveRes r = new MoveRes(false);
         try {
@@ -85,7 +86,7 @@ public class BankStub implements BankInterface, MessageListener {
             oos.flush();
 
             msg.setPayload(os.toByteArray());
-            ds.multicast(msg, null, null);
+            ds.multicast(msg, new IpService(), null);
             msg = null;
             while (msg == null) {
                 wait();
@@ -100,7 +101,7 @@ public class BankStub implements BankInterface, MessageListener {
         return r.isSuccess();
     }
 
-    public void quit() {
+    public synchronized void quit() {
         try {
             Op o = new Quit();
             Message msg = ds.createMessage();
