@@ -1,10 +1,8 @@
 package bank;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 
 public class Client {
 
@@ -53,7 +51,8 @@ public class Client {
 
                 case 9:
                     bstub.quit();
-                    return;
+                    System.exit(0);
+                    break;
 
                 default:
                     System.out.println("Invalid Operation!");

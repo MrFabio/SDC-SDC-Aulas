@@ -7,22 +7,28 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import methods.*;
+import methods.Balance;
+import methods.BalanceRes;
+import methods.Move;
+import methods.MoveRes;
+import methods.Op;
+import methods.Quit;
+import net.sf.jgcs.ControlSession;
 import net.sf.jgcs.DataSession;
 import net.sf.jgcs.Message;
 import net.sf.jgcs.MessageListener;
 import net.sf.jgcs.Protocol;
-import net.sf.jgcs.ip.IpGroup;
-import net.sf.jgcs.ip.IpProtocolFactory;
-import net.sf.jgcs.ip.IpService;
+import net.sf.jgcs.jgroups.JGroupsGroup;
+import net.sf.jgcs.jgroups.JGroupsProtocolFactory;
+import net.sf.jgcs.jgroups.JGroupsService;
 
 public class BankStub implements BankInterface, MessageListener {
 
-    IpProtocolFactory pf = null;
-    IpGroup gc = null;
+    JGroupsProtocolFactory pf = null;
+    JGroupsGroup gc = null;
+    ControlSession cs = null;
 
     Message msgres;
-    Protocol p;
     private DataSession ds;
     ByteArrayOutputStream os;
     ObjectOutputStream oos;
@@ -34,15 +40,13 @@ public class BankStub implements BankInterface, MessageListener {
 
         try {
 
-            pf = new IpProtocolFactory();
-            gc = new IpGroup("225.1.2.3:12345");
-            p = pf.createProtocol();
-
-            ds = p.openDataSession(gc);
-            ds.setMessageListener(this);
-
-            os = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(os);
+            JGroupsProtocolFactory pf = new JGroupsProtocolFactory();
+            JGroupsGroup gg = new JGroupsGroup("banco");
+            Protocol p = pf.createProtocol();
+            this.ds = p.openDataSession(gg);
+            this.ds.setMessageListener(this);
+            cs = p.openControlSession(gg);
+            cs.join();
 
         } catch (IOException ex) {
             Logger.getLogger(BankStub.class.getName()).log(Level.SEVERE, null, ex);
@@ -56,14 +60,17 @@ public class BankStub implements BankInterface, MessageListener {
         try {
             Op o = new Balance();
 
+            os = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(os);
+
             Message msg = ds.createMessage();
             oos.writeObject(o);
             oos.flush();
 
             msg.setPayload(os.toByteArray());
-            ds.multicast(msg, new IpService(), null);
-            msg = null;
-            while (msg == null) {
+            ds.multicast(msg, new JGroupsService(), null);
+            msgres = null;
+            while (msgres == null) {
                 wait();
             }
             is = new ByteArrayInputStream(msgres.getPayload());
@@ -80,21 +87,29 @@ public class BankStub implements BankInterface, MessageListener {
 
         MoveRes r = new MoveRes(false);
         try {
+
+            os = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(os);
             Op o = new Move(ammount);
             Message msg = ds.createMessage();
             oos.writeObject(o);
             oos.flush();
 
             msg.setPayload(os.toByteArray());
-            ds.multicast(msg, new IpService(), null);
-            msg = null;
-            while (msg == null) {
+            ds.multicast(msg, new JGroupsService(), null);
+            msgres = null;
+            while (msgres == null) {
                 wait();
             }
 
             is = new ByteArrayInputStream(msgres.getPayload());
             ois = new ObjectInputStream(is);
-            r = ((MoveRes) ois.readObject());
+            Object ob = ois.readObject();
+            if (ob instanceof MoveRes) {
+                r = ((MoveRes) ob);
+            } else {
+                return false;
+            }
         } catch (IOException | ClassNotFoundException | InterruptedException ex) {
             Logger.getLogger(BankStub.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -103,32 +118,32 @@ public class BankStub implements BankInterface, MessageListener {
 
     public synchronized void quit() {
         try {
+
+            os = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(os);
             Op o = new Quit();
             Message msg = ds.createMessage();
             oos.writeObject(o);
             msg.setPayload(os.toByteArray());
-            ds.multicast(msg, null, null);
-            msg = null;
-            while (msg == null) {
-                wait();
-            }
+            ds.multicast(msg, new JGroupsService(), null);
 
-            ois.close();
-            oos.close();
-
-        } catch (IOException | InterruptedException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(BankStub.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     @Override
-    public Object onMessage(Message msg) {
+    public synchronized Object onMessage(Message msg) {
 
-        msgres = msg;
+        if (msg.getSenderAddress().equals(cs.getLocalAddress())) {
+            //System.out.println("===== Discarded Message");
+        } else {
+            //System.out.println("===== Received Response from " + msg.getSenderAddress());
+            msgres = msg;
+            notify();
+        }
 
-        notify();
-
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return null;
     }
 
 }
